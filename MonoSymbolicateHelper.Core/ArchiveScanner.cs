@@ -23,17 +23,20 @@ namespace MonoSymbolicateHelper.Core
             {
                 foreach (var projectFolder in Directory.EnumerateDirectories(dateFolder))
                 {
-                    var info = ReadArchiveInfo(projectFolder);
-                    // check if existing archive for this key and only keep latest creation date
-                    if (_archives.ContainsKey(info.Key))
+                    if (projectFolder.Contains("Packages"))
                     {
-                        var exist = _archives[info.Key];
-                        if (exist.CreationDate > info.CreationDate)
+                        var info = ReadArchiveInfo(projectFolder);
+                        // check if existing archive for this key and only keep latest creation date
+                        if (_archives.ContainsKey(info.Key))
                         {
-                            continue;
+                            var exist = _archives[info.Key];
+                            if (exist.CreationDate > info.CreationDate)
+                            {
+                                continue;
+                            }
                         }
+                        _archives[info.Key] = info;
                     }
-                    _archives[info.Key] = info;
                 }
             }
 
@@ -47,39 +50,24 @@ namespace MonoSymbolicateHelper.Core
 
         private ArchiveInfo ReadArchiveInfo(string projectFolder)
         {
-            var filePath = Path.Combine(projectFolder, "archive.xml");
             var info = new ArchiveInfo {ArchivePath = projectFolder};
 
-            using (var fs = File.OpenRead(filePath))
-            using (var reader = XmlReader.Create(fs))
-            {
-                while (reader.Read())
-                {
-                    switch (reader.NodeType)
-                    {
-                        case XmlNodeType.Element:
-                            switch (reader.Name)
-                            {
-                                case "Name":
-                                    info.Name = reader.ReadElementContentAsString();
-                                    break;
-                                case "PackageName":
-                                    info.PackageName = reader.ReadElementContentAsString();
-                                    break;
-                                case "PackageVersionCode":
-                                    info.PackageVersionCode = reader.ReadElementContentAsString();
-                                    break;
-                                case "PackageVersionName":
-                                    info.PackageVersionName = reader.ReadElementContentAsString();
-                                    break;
-                                case "CreationDate":
-                                    info.CreationDate = Convert.ToInt64(reader.ReadElementContentAsString());
-                                    break;
-                            }
-                            break;
-                    }
-                }
-            }
+            //Get versions from folder
+            var parts = projectFolder.Split('\\');
+            var versionPart = parts[6];
+            var version = versionPart.Split('_')[1];
+            var versionCodeSplit = version.Split('.');
+            var versionCode = string.Format("{0}{1}", versionCodeSplit[0], versionCodeSplit[1]);
+            if (versionCodeSplit[2].Length == 2)
+                versionCode = versionCode.Insert(2, string.Format("0{0}", versionCodeSplit[2]));
+            else
+                versionCode = versionCode.Insert(2, versionCodeSplit[2]);
+            info.Name = "Tyler Drive";
+            info.PackageName = "com.tyler.versatrans.mdd";
+            info.PackageVersionCode = versionCode;
+            info.PackageVersionName = version;
+            info.CreationDate = DateTime.MinValue.Ticks;
+
             return info;
         }
     }

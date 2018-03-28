@@ -9,7 +9,7 @@
         public long CreationDate { get; set; }
 
         public string ArchivePath { get; set; }
-        public string mSymPath => $@"{ArchivePath}\mSYM\{PackageName}.apk.mSYM";
+        public string mSymPath => $@"{ArchivePath}\{PackageName}.apk.mSYM";
         public string Key => GetKey(PackageName, PackageVersionCode);
 
         public static string GetKey(string packageName, string versionCode)
